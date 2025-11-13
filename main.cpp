@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
-
+#include <fstream>
 #include "vex.h"
 
 using namespace vex;
@@ -36,6 +36,62 @@ controller Controller = controller();
 motor MotorBox = motor(PORT1, true);
 motor MotorLock = motor(PORT6, true);
 
+// allows us to save any paths we stored
+bool savePathsToFile(const std::vector<Path> &pathLibrary)
+{
+    std::ofstream fout("robotPaths.txt");
+    if (!fout)
+    {
+        Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("File not opened correctly!");
+        return false;
+    }
+    fout << pathLibrary.size() << std::endl;
+
+    for (int i = 0; i < pathLibrary.size(); i++)
+    {
+        const Path &currentPath = pathLibrary[i];
+        fout << currentPath.startPoint << " " << currentPath.endPoint << " " << currentPath.totalDistance_mm << " " << currentPath.length << std::endl;
+        for (int j = 0; j < currentPath.length; j++)
+        {
+            fout << currentPath.steps[j][0] << " " << currentPath.steps[j][1] << std::endl;
+        }
+    }
+    fout.close();
+    return true;
+}
+
+// allows us to load the previously saved files
+bool loadPathsFromFile(std::vector<Path> &pathLibrary)
+{
+    std::ifstream fin("robotPaths.txt");
+    if (!fin)
+    {
+        Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1, 1);
+        Brain.Screen.print("File not opened correctly!");
+        return false;
+    }
+    pathLibrary.clear();
+    int totalPaths = 0;
+    fin >> totalPaths;
+
+    for (int i = 0; i < totalPaths; i++)
+    {
+        Path newPath;
+
+        fin >> newPath.startPoint >> newPath.endPoint >> newPath.totalDistance_mm >> newPath.length;
+
+        for (int j = 0; j < newPath.length; j++)
+        {
+            fin >> newPath.steps[j][0] >> newPath.steps[j][1];
+        }
+        pathLibrary.push_back(newPath);
+    }
+    fin.close();
+    return true;
+}
 // generating and setting random seed
 void initializeRandomSeed()
 {
