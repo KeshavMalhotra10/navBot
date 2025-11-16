@@ -6,7 +6,6 @@
 #include <math.h>
 #include <string.h>
 #include <sstream>
-
 #include "vex.h"
 
 using namespace vex;
@@ -31,7 +30,7 @@ motor MotorLeft = motor(PORT12, false);
 motor MotorRight = motor(PORT7, true);
 optical OpticalSensor = optical(PORT9);
 distance DistanceSensor = distance(PORT8);
-bumper BumperSensor = bumper(PORT5);
+bumper BumperSensor = bumper(PORT11);
 touchled TouchSensor = touchled(PORT10);
 controller Controller = controller();
 motor MotorBox = motor(PORT1, true);
@@ -149,35 +148,24 @@ bool RemoteControlCodeEnabled = true;
 
 #pragma endregion VEXcode Generated Robot Configuration
 
-//----------------------------------------------------------------------------
-//
-//    Module:       main.cpp
-//    Author:       {author}
-//    Created:      {date}
-//    Description:  IQ project
-//
-//----------------------------------------------------------------------------
-
 // Include the IQ Library
 #include "iq_cpp.h"
-// safety feature if next move is a turn it should make a noise
 #include <string>
 #include <vector>
 #include <limits>   //allows for a proper shortest path implementation
 #include <stdio.h>  // Required for sprintf
 #include <string.h> // Required for strlen
-#include <sstream>
-// Allows for easier use of the VEX Library
+#include <sstream>  // Required to print to SDcard
+
 using namespace vex;
 
 // global var and constant
-const int MAX_ROOMS = 5; // will make this bigger later
+const int MAX_ROOMS = 5;
 const int WHEEL_CIRCUMFERENCE_MM = 200;
 const int DRIVE_MODE = 0;
 const int TURN_MODE = 1;
 const int FIXED_POINT_SCALE = 100;
-// needs to be a c style string
-const char *PATH_FILE = "robotPaths.txt";
+const char *PATH_FILE = "robotPaths.txt"; // needs to be a c style string
 motor_group DriveMotors(MotorLeft, MotorRight);
 
 class Path
@@ -266,13 +254,11 @@ void deleteSavedPaths()
     {
         Brain.Screen.print("No saved paths found. Nothing to delete.");
     }
-
     wait(2, sec); // Give the user time to read the message
 }
 
 bool loadPathsFromFile(std::vector<Path> &pathLibrary)
 {
-
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
     Brain.Screen.print("Loading File...");
@@ -334,7 +320,6 @@ bool loadPathsFromFile(std::vector<Path> &pathLibrary)
         itemsRead = sscanf(readPoint, "%d %d %d %d%n",
                            &pathToAdd.startPoint, &pathToAdd.endPoint,
                            &tempDist, &pathToAdd.length, &offset);
-
         if (itemsRead != 4)
         {
             Brain.Screen.print("E: CORRUPT PATH");
@@ -344,7 +329,6 @@ bool loadPathsFromFile(std::vector<Path> &pathLibrary)
         {
             readPoint += offset;
             pathToAdd.totalDistance_mm = (double)tempDist / FIXED_POINT_SCALE;
-
             for (int j = 0; j < pathToAdd.length; j++)
             {
                 sscanf(readPoint, "%d %d%n", &tempStepMode, &tempStepVal, &offset);
@@ -355,9 +339,7 @@ bool loadPathsFromFile(std::vector<Path> &pathLibrary)
             pathLibrary.push_back(pathToAdd);
         }
     }
-
     delete[] buffer;
-
     if (success)
     {
         Brain.Screen.print("Load Succeeded!");
@@ -374,22 +356,20 @@ bool loadPathsFromFile(std::vector<Path> &pathLibrary)
 void pressToOpen(int waitTime)
 {
     double initialTime = Brain.Timer.value();
-
     while (!TouchSensor.pressing() && (Brain.Timer.value() - initialTime) < waitTime)
     {
     }
-
     if (!TouchSensor.pressing())
     {
         while (!TouchSensor.pressing())
         {
             Brain.Screen.clearScreen();
+            Brain.Screen.setCursor(1, 1);
             Brain.Screen.print("Please press the button!");
             Brain.playSound(siren);
             wait(1, seconds);
         }
     }
-
     while (TouchSensor.pressing())
     {
     }
@@ -407,8 +387,10 @@ void pressToClose()
 
 void openBox(double openPosition, double lockPosition, int waitTime)
 {
-
     const double Turns_to_Cm = 20.0;
+    Brain.Screen.clearScreen();
+    Brain.Screen.setCursor(1, 1);
+    Brain.Screen.print("Open Box!");
     pressToOpen(waitTime);
     MotorLock.spin(forward, 7, percent);
     while (MotorLock.position(turns) * Turns_to_Cm < lockPosition)
@@ -421,10 +403,7 @@ void openBox(double openPosition, double lockPosition, int waitTime)
     {
         wait(20, msec);
     }
-
     MotorBox.stop(hold);
-    Brain.Screen.clearScreen();
-    Brain.Screen.setCursor(1, 1);
     pressToClose();
     MotorBox.spin(reverse, 7, percent);
     while (MotorBox.position(turns) > 0)
@@ -436,10 +415,10 @@ void openBox(double openPosition, double lockPosition, int waitTime)
     {
     }
     MotorLock.stop(hold);
+    Brain.Screen.clearScreen();
 }
 
 // ui
-
 // input menu
 int getNumberInput(const std::string prompt)
 {
@@ -487,12 +466,10 @@ int getNumberInput(const std::string prompt)
         else if (Controller.ButtonEDown.pressing() == 1)
         {
             currentSelection--;
-
             if (currentSelection < 1)
             {
                 currentSelection = MAX_ROOMS; // wrap around
             }
-
             while (Controller.ButtonEDown.pressing() == 1)
             {
             }
@@ -507,8 +484,7 @@ int getNumberInput(const std::string prompt)
 
     while (Controller.ButtonRUp.pressing() || Controller.ButtonLUp.pressing())
     {
-    } // dont let them potentially go to another menu screen and
-    // write a value there accidently by holding this button
+    } // Don’t let them potentially go to another menu screen and write a value there accidentally by holding this button.
 
     return currentSelection;
 }
@@ -534,6 +510,7 @@ void createAdjacencyMatrix(const std::vector<Path> &pathLibrary, double (&adjace
         adjacencyMatrix[start][end] = dist;
     }
 }
+
 std::vector<int> shortestPath(int start, int end, const double (&adjacencyMatrix)[MAX_ROOMS + 1][MAX_ROOMS + 1])
 {
     // basically uses djikstras
@@ -557,7 +534,6 @@ std::vector<int> shortestPath(int start, int end, const double (&adjacencyMatrix
     {
         double minDist = INF;
         int closestPoint = -1; //-1 indicates not found yet
-
         // this part finds the node with the least distance that hasnt been visited
         // basically a greedy algo
         for (int j = 1; j <= MAX_ROOMS; j++)
@@ -641,6 +617,7 @@ int findPath(int startNode, int endNode, const std::vector<Path> &pathLibrary)
     return -1;
 }
 
+// changes an angle to be between 0, 360
 double normalizeAngle360(double angle)
 {
     while (angle < 360)
@@ -651,6 +628,7 @@ double normalizeAngle360(double angle)
     return angle;
 }
 
+// changes an angle to be between 0, 180
 double normalizeAngle180(double angle)
 {
     while (angle > 180.0)
@@ -659,16 +637,19 @@ double normalizeAngle180(double angle)
         angle += 360.0;
     return angle;
 }
+
+// returns the reverse of an input path
 Path reversePath(Path forwardPath)
 {
     Path backwardPath;
     backwardPath.length = forwardPath.length;
+    // swaps start and end points
     backwardPath.startPoint = forwardPath.endPoint;
     backwardPath.endPoint = forwardPath.startPoint;
     backwardPath.totalDistance_mm = forwardPath.totalDistance_mm;
     if (forwardPath.length < 3)
     {
-        return backwardPath;
+        return backwardPath; // If path is only a turn and move, its done
     }
 
     std::vector<double> forwardHeadings;
@@ -683,7 +664,7 @@ Path reversePath(Path forwardPath)
         {
             forwardDrives.push_back(forwardPath.steps[i][1]);
         }
-    }
+    } // separates the input path into turn headings and distances
 
     int driveIndex = forwardDrives.size() - 1;
     int headingIndex = forwardDrives.size() - 1;
@@ -725,7 +706,7 @@ void initRobot()
     }
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
-    Brain.Screen.print("Calibration Compcete!");
+    Brain.Screen.print("Calibration Complete!");
     wait(1, sec);
     Brain.Screen.clearScreen();
     Brain.Screen.setCursor(1, 1);
@@ -744,11 +725,6 @@ void initRobot()
     Brain.Screen.newLine();
     Brain.Screen.print("and press L DOWN");
 
-    // while(!Controller.ButtonLDown.pressing()) {
-    // }
-    // while(Controller.ButtonLDown.pressing()) {
-    // }
-
     BrainInertial.setHeading(0, degrees);
 
     Brain.Screen.clearScreen();
@@ -759,62 +735,17 @@ void initRobot()
     DriveMotors.resetPosition();
 }
 
-// bool drive(double distance_mm) {
-//   const double DRIVE_P = 0.5;
-//   const double SYNC_RATIO = 1;
-//   const double MIN_POWER = 300;    //we need to see what value can overcome friction
-//   const double MAX_POWER = 600;
-//   const double START_SLOW_DOWN = 500.0;  //when to start slowing down
-//   const double MIN_OBSTACLE_DIST = 150.0;   //when to fully stop if the obstacle is in this range
-//   DriveMotors.resetPosition();
-//   double initialHeading = BrainInertial.heading(degrees);
-
-//   while(turns_to_mm(DriveMotors.position(turns)) < distance_mm) {
-//     if(BumperSensor.pressing()) {
-//       DriveMotors.stop(hold);
-//       Brain.Screen.print("obstacle!");
-//       return false;
-//     }
-//     while(DistanceSensor.objectDistance(mm) < MIN_OBSTACLE_DIST) {
-//       DriveMotors.stop(hold);
-//       if (BumperSensor.pressing()) {
-//         return false;
-//       }
-//     }
-
-//     //speed control
-//     double distanceToTravel = distance_mm - turns_to_mm(DriveMotors.position(turns));
-//     double basePower = MAX_POWER;
-
-//     if(distanceToTravel < START_SLOW_DOWN) {
-//       basePower = std::max(MIN_POWER, distanceToTravel * DRIVE_P);
-
-//     }
-
-//     //heading control
-//     double angleError = (initialHeading - BrainInertial.heading(degrees));
-//     angleError = normalizeAngle180(angleError);
-//     double correction = angleError * SYNC_RATIO * basePower/MAX_POWER;
-
-//     MotorLeft.spin(forward, std::max(0.0,basePower + correction), dps);
-//     MotorRight.spin(forward, std::max(0.0,basePower - correction), dps);
-//   }
-
-//   DriveMotors.stop(hold);
-//   return true;
-// }
-
 bool drive(double distance_mm)
 {
-    const double DISTANCE_P = 0.05;
-    const double HEADING_P = 0.005;
-    const double HEADING_I = 0.0000;
+    const double DISTANCE_P = 0.05;  // proportional drive const
+    const double DISTANCE_I = 0.001; // integral drive const
+    const double HEADING_P = 0.005;  // proportional heading const
     const double MIN_POWER = 30;
     const double MAX_POWER = 70;
-    const double START_SLOWDOWN_MM = 200;
+    const double START_SLOWDOWN_MM = 200; // dist to start slowing down
     const double MIN_OBSTACLE_DISTANCE_MM = 100;
 
-    double headingErrorSum = 0;
+    double distErrorSum = 0;
     DriveMotors.resetPosition();
     double initialHeading = BrainInertial.heading(degrees);
 
@@ -823,6 +754,9 @@ bool drive(double distance_mm)
         if (BumperSensor.pressing())
         {
             DriveMotors.stop(hold);
+            Brain.Screen.clearScreen();
+            Brain.Screen.clearScreen();
+            Brain.Screen.setCursor(1, 1);
             Brain.Screen.print("obstacle!");
             wait(2000, msec);
             return false;
@@ -832,27 +766,26 @@ bool drive(double distance_mm)
             DriveMotors.stop(hold);
             if (BumperSensor.pressing())
             {
+                Brain.Screen.clearScreen();
+                Brain.Screen.setCursor(1, 1);
                 Brain.Screen.print("obstacle!");
                 wait(2000, msec);
                 return false;
             }
         }
-
         // control for base power (distance controller)
         double distanceToTravel = distance_mm - turns_to_mm(DriveMotors.position(turns));
+        distErrorSum += distanceToTravel;
         double basePower = MAX_POWER;
 
         if (distanceToTravel < START_SLOWDOWN_MM)
         {
-            basePower = std::max(MIN_POWER, distanceToTravel * DISTANCE_P);
+            basePower = std::max(MIN_POWER, distanceToTravel * DISTANCE_P + distErrorSum * DISTANCE_I);
         }
-
         // heading control
         double headingError = normalizeAngle180((normalizeAngle180(initialHeading) - normalizeAngle180(BrainInertial.heading(degrees))));
 
-        headingErrorSum += headingError;
-
-        double correction = headingError * HEADING_P + headingErrorSum * HEADING_I;
+        double correction = headingError * HEADING_P;
         double leftPower = basePower * (1 + correction);
         double rightPower = basePower * (1 - correction);
 
@@ -861,6 +794,7 @@ bool drive(double distance_mm)
 
         MotorLeft.spin(forward, std::max(0.0, leftPower), percent);
         MotorRight.spin(forward, std::max(0.0, rightPower), percent);
+        wait(1, msec);
     }
 
     DriveMotors.stop(hold);
@@ -1018,7 +952,7 @@ bool runSinglePath(const Path &pathToRun)
                 return false;
         }
         else
-        { // TURN mode !!902903109i309i21309i21dsadoijaoijda
+        { // TURN mode
 
             double target_heading = pathToRun.steps[i][1];
             double current_heading = BrainInertial.heading(degrees);
@@ -1173,6 +1107,8 @@ void runTrainingMode(Path &pathToRecord)
                 if (currentState == DRIVE_MODE)
                 {
                     currentState = TURN_MODE;
+                    Brain.Screen.setCursor(5, 1);
+                    Brain.Screen.print("Press F Up to Save Path");
                 }
                 else
                 {
@@ -1329,14 +1265,13 @@ int main()
     }
     wait(5000, msec);
 
-    // Brain.programStop();
-
     double adjacencyMatrix[MAX_ROOMS + 1][MAX_ROOMS + 1] = {};
     createAdjacencyMatrix(pathLibrary, adjacencyMatrix);
     bool programExit = false;
 
     while (!programExit)
     {
+
         Brain.Screen.clearScreen();
         Brain.Screen.setCursor(1, 1);
         std::string mode = mainMenu();
@@ -1362,6 +1297,7 @@ int main()
         }
         else if (mode == "AUTONOMOUS")
         {
+
             int start = getNumberInput("START ROOM:");
             int end = getNumberInput("ENDING ROOM:");
             if (start != -1 && end != -1)
@@ -1370,10 +1306,15 @@ int main()
 
                 if (!waypoints.empty())
                 {
+                    Brain.Screen.clearScreen();
+                    Brain.Screen.setCursor(1, 1);
+                    Brain.Screen.print("Runing Route");
                     bool success = executeJourney(waypoints, pathLibrary);
 
                     if (success)
                     {
+                        Brain.Screen.clearScreen();
+                        Brain.Screen.setCursor(1, 1);
                         openBox(openPosition, lockPosition, timeToOpen);
                     }
                     else
@@ -1385,9 +1326,13 @@ int main()
                 }
                 else
                 {
+                    DriveMotors.stop(hold);
+                    Brain.playSound(siren);
                     Brain.Screen.clearScreen();
                     Brain.Screen.setCursor(1, 1);
-                    Brain.Screen.print("no path found");
+                    Brain.Screen.print("Emergency Stop! Ending Program");
+                    wait(3000, msec);
+                    programExit = true;
                 }
             }
         }
@@ -1421,7 +1366,6 @@ int main()
         Brain.Screen.setCursor(1, 1);
         wait(1000, msec);
     }
-
     Brain.Screen.print("program was shut down :(");
     wait(5000, msec);
     Brain.programStop();
