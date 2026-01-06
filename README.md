@@ -1,4 +1,4 @@
-# NavBot — Autonomous Hospital Navigation Robot (VEX IQ) 🤖
+# NavBot — Autonomous Hospital Navigation Robot (VEX IQ) 
 
 [![YouTube Demo](https://img.youtube.com/vi/rkE9pB7YZUg/0.jpg)](https://youtu.be/rkE9pB7YZUg)
 
