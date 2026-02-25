@@ -4,11 +4,11 @@
 
 **NavBot** is an autonomous navigation robot built on the **VEX IQ platform** using **C++**. It is designed to automate repetitive navigation tasks commonly faced by hospital staff, allowing healthcare workers to focus their time and energy on patient care rather than logistics.
 
-👉 **Watch the demo video above** to see NavBot in action.
+ **Watch the demo video above** to see NavBot in action.
 
 ---
 
-## 🚑 Why NavBot Matters
+##  Why NavBot Matters
 
 Hospitals are high-pressure environments where staff are frequently **overworked and time-constrained**. Nurses and support staff often spend a significant portion of their shifts performing repetitive tasks such as:
 
@@ -20,7 +20,7 @@ NavBot addresses this problem by **automating repetitive navigation tasks**, hel
 
 ---
 
-## 🎯 Project Goals
+##  Project Goals
 
 - Reduce repetitive workload for hospital staff
 - Have an opening and closing box for medication delivery
@@ -29,7 +29,7 @@ NavBot addresses this problem by **automating repetitive navigation tasks**, hel
 - Build an intuitive, user-friendly interface to interact with the robot
 
 
-## 🚀 Project Overview
+##  Project Overview
 
 NavBot is an autonomous indoor navigation robot designed for structured hospital environments.
 
@@ -46,19 +46,19 @@ NavBot operates as a **fully self-contained system** with an onboard, controller
 
 ---
 
-## 🔍 Key Features
+##  Key Features
 
-- 🧭 **Autonomous Path Planning** using Dijkstra’s algorithm
-- 📦 **Automated Box**for medication delivery
-- 🎮 **Remote-Controlled Route Training**
-- 💾 **Saved Route Execution**
-- 🖥️ **User Interface via VEX Controller**
-- 🚧 **Real-Time Obstacle Detection & Collision Handling**
-- ⚙️ Reliable motor control for indoor environments
+-  **Autonomous Path Planning** using Dijkstra’s algorithm
+-  **Automated Box**for medication delivery
+-  **Remote-Controlled Route Training**
+-  **Saved Route Execution**
+-  **User Interface via VEX Controller**
+-  **Real-Time Obstacle Detection & Collision Handling**
+-  Reliable motor control for indoor environments
 
 ---
 
-## 🧠 Algorithms Used
+##  Algorithms Used
 
 - **Dijkstra’s Algorithm**
   - Computes optimal routes between waypoints
@@ -71,7 +71,7 @@ NavBot operates as a **fully self-contained system** with an onboard, controller
 
 ---
 
-## 📡 Sensors Used
+## Sensors Used
 
 NavBot relies entirely on onboard VEX IQ sensors:
 
@@ -83,7 +83,7 @@ These sensors allow NavBot to operate safely **without external localization or 
 
 ---
 
-## 🎮 Remote Control & User Interface
+## Remote Control & User Interface
 
 NavBot features a **controller-based UI** that allows users to:
 
@@ -97,7 +97,7 @@ This design makes NavBot easy to deploy in real environments without additional 
 
 ---
 
-## ▶️ How It Works
+##  How It Works
 
 1. A user manually drives NavBot using the controller to **train a route**
 2. Waypoints are stored as nodes in a graph
